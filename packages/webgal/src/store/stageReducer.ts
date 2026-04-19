@@ -72,6 +72,11 @@ export const initState: IStageState = {
   currentConcatDialogPrev: '',
   enableFilm: '',
   isDisableTextbox: false,
+  isTextBoxInput: false,
+  textBoxInputVarKey: '',
+  textBoxInputPlaceholder: '',
+  textBoxInputButtonText: '',
+  textBoxInputDefaultValue: '',
   replacedUIlable: {},
   figureMetaData: {},
 };

@@ -18,6 +18,7 @@ import { match } from '@/Core/util/match';
  * @return {IPerform} 执行的演出
  */
 export const say = (sentence: ISentence): IPerform => {
+  console.log('@@')
   const stageState = webgalStore.getState().stage;
   const userDataState = webgalStore.getState().userData;
   const dispatch = webgalStore.dispatch;
@@ -31,6 +32,19 @@ export const say = (sentence: ISentence): IPerform => {
   const speaker = getStringArgByKey(sentence, 'speaker'); // 获取说话者
   const clear = getBooleanArgByKey(sentence, 'clear') ?? false; // 是否清除说话者
   const vocal = getStringArgByKey(sentence, 'vocal'); // 是否播放语音
+  const inputVarKeyRaw = getStringArgByKey(sentence, 'inputVar') ?? getStringArgByKey(sentence, 'input');
+  console.log('inputVarKeyRaw',inputVarKeyRaw)
+  const isTextBoxInput = !!inputVarKeyRaw && inputVarKeyRaw.trim() !== '';
+  const inputVarKey = (inputVarKeyRaw ?? '').trim();
+  const inputPlaceholder = getStringArgByKey(sentence, 'inputPlaceholder') ?? '';
+  const inputButtonText = getStringArgByKey(sentence, 'inputButtonText') ?? '';
+  const inputDefaultValue = getStringArgByKey(sentence, 'inputDefaultValue') ?? '';
+
+  dispatch(setStage({ key: 'isTextBoxInput', value: isTextBoxInput }));
+  dispatch(setStage({ key: 'textBoxInputVarKey', value: isTextBoxInput ? inputVarKey : '' }));
+  dispatch(setStage({ key: 'textBoxInputPlaceholder', value: isTextBoxInput ? inputPlaceholder : '' }));
+  dispatch(setStage({ key: 'textBoxInputButtonText', value: isTextBoxInput ? inputButtonText : '' }));
+  dispatch(setStage({ key: 'textBoxInputDefaultValue', value: isTextBoxInput ? inputDefaultValue : '' }));
 
   // 如果是concat，那么就继承上一句的key，并且继承上一句对话。
   if (isConcat) {
@@ -143,9 +157,47 @@ export const say = (sentence: ISentence): IPerform => {
     endDelay = 0;
   }
 
+  const baseDuration = sentenceDelay + endDelay + performSimulateVocalDelay;
+
+  if (isTextBoxInput) {
+    let settled = false;
+    const settleTextAndStopVocalSimulate = () => {
+      if (settled) return;
+      settled = true;
+      WebGAL.events.textSettle.emit();
+      if (performSimulateVocalTimeout) {
+        performSimulateVocal(true);
+        clearTimeout(performSimulateVocalTimeout);
+        performSimulateVocalTimeout = null;
+      }
+    };
+    const settleTimeout = setTimeout(() => {
+      settleTextAndStopVocalSimulate();
+    }, baseDuration);
+
+    return {
+      performName: 'say-input',
+      duration: 1000 * 60 * 60 * 24,
+      isHoldOn: false,
+      stopFunction: () => {
+        clearTimeout(settleTimeout);
+        settleTextAndStopVocalSimulate();
+        dispatch(setStage({ key: 'isTextBoxInput', value: false }));
+        dispatch(setStage({ key: 'textBoxInputVarKey', value: '' }));
+        dispatch(setStage({ key: 'textBoxInputPlaceholder', value: '' }));
+        dispatch(setStage({ key: 'textBoxInputButtonText', value: '' }));
+        dispatch(setStage({ key: 'textBoxInputDefaultValue', value: '' }));
+      },
+      blockingNext: () => true,
+      blockingAuto: () => true,
+      stopTimeout: undefined,
+      goNextWhenOver: true,
+    };
+  }
+
   return {
     performName: performInitName,
-    duration: sentenceDelay + endDelay + performSimulateVocalDelay,
+    duration: baseDuration,
     isHoldOn: false,
     stopFunction: () => {
       WebGAL.events.textSettle.emit();

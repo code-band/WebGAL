@@ -18,4 +18,9 @@ export interface ITextboxProps {
   lineLimit: number;
   isUseStroke: boolean;
   textboxOpacity: number;
+  isTextBoxInput: boolean;
+  textBoxInputVarKey: string;
+  textBoxInputPlaceholder: string;
+  textBoxInputButtonText: string;
+  textBoxInputDefaultValue: string;
 }

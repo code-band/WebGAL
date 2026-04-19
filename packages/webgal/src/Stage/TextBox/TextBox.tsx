@@ -104,6 +104,11 @@ export const TextBox = () => {
       lineLimit={lineLimit}
       isUseStroke={isShowStroke}
       textboxOpacity={textboxOpacity}
+      isTextBoxInput={stageState.isTextBoxInput}
+      textBoxInputVarKey={stageState.textBoxInputVarKey}
+      textBoxInputPlaceholder={stageState.textBoxInputPlaceholder}
+      textBoxInputButtonText={stageState.textBoxInputButtonText}
+      textBoxInputDefaultValue={stageState.textBoxInputDefaultValue}
     />
   );
 };

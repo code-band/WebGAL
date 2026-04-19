@@ -248,6 +248,11 @@ export interface IStageState {
   // 测试：电影叙事
   enableFilm: string;
   isDisableTextbox: boolean;
+  isTextBoxInput: boolean;
+  textBoxInputVarKey: string;
+  textBoxInputPlaceholder: string;
+  textBoxInputButtonText: string;
+  textBoxInputDefaultValue: string;
   replacedUIlable: Record<string, string>;
   figureMetaData: figureMetaData;
 }

@@ -54,6 +54,11 @@ export const TextPreview = (props: any) => {
     lineLimit: 3,
     isUseStroke: true,
     textboxOpacity: textboxOpacity,
+    isTextBoxInput: false,
+    textBoxInputVarKey: '',
+    textBoxInputPlaceholder: '',
+    textBoxInputButtonText: '',
+    textBoxInputDefaultValue: '',
   };
 
   return (

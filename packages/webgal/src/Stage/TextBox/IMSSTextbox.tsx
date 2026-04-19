@@ -1,12 +1,13 @@
 import styles from './textbox.module.scss';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { WebGAL } from '@/Core/WebGAL';
 import { ITextboxProps } from './types';
 import useApplyStyle from '@/hooks/useApplyStyle';
 import { css } from '@emotion/css';
 import { textSize } from '@/store/userDataInterface';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
+import { RootState, webgalStore } from '@/store/store';
+import { setStageVar } from '@/store/stageReducer';
 
 export default function IMSSTextbox(props: ITextboxProps) {
   const {
@@ -26,6 +27,11 @@ export default function IMSSTextbox(props: ITextboxProps) {
     isUseStroke,
     textboxOpacity,
     textSizeState,
+    isTextBoxInput,
+    textBoxInputVarKey,
+    textBoxInputPlaceholder,
+    textBoxInputButtonText,
+    textBoxInputDefaultValue,
   } = props;
 
   const applyStyle = useApplyStyle('textbox');
@@ -194,10 +200,34 @@ export default function IMSSTextbox(props: ITextboxProps) {
   const lineHeightCssStr = `line-height: ${finalTextLineHeight}em`;
   const lhCss = css(lineHeightCssStr);
 
+  const [userInputValue, setUserInputValue] = useState('');
+
+  useEffect(() => {
+    if (!isTextBoxInput) return;
+    setUserInputValue(textBoxInputDefaultValue ?? '');
+    setTimeout(() => {
+      const inputEl = document.getElementById('textbox-user-input') as HTMLInputElement | null;
+      inputEl?.focus();
+    }, 0);
+  }, [currentDialogKey, isTextBoxInput, textBoxInputDefaultValue]);
+
+  const sendUserInput = () => {
+    const varKey = (textBoxInputVarKey ?? '').trim();
+    if (!varKey) return;
+    const valueToStore = userInputValue !== '' ? userInputValue : textBoxInputDefaultValue || ' ';
+    webgalStore.dispatch(
+      setStageVar({
+        key: varKey,
+        value: valueToStore,
+      }),
+    );
+    WebGAL.gameplay.performController.unmountPerform('say-input');
+  };
+
   return (
     <>
       {isText && (
-        <div className={styles.TextBox_Container}>
+        <div className={styles.TextBox_Container} style={isTextBoxInput ? { zIndex: 13 } : undefined}>
           <div
             className={
               applyStyle('TextBox_main', styles.TextBox_main) +
@@ -267,6 +297,26 @@ export default function IMSSTextbox(props: ITextboxProps) {
             >
               {textElementList}
             </div>
+            {isTextBoxInput && (
+              <div className={applyStyle('textInputRow', styles.textInputRow)}>
+                <input
+                  id="textbox-user-input"
+                  className={applyStyle('textInput', styles.textInput)}
+                  value={userInputValue}
+                  placeholder={textBoxInputPlaceholder || ''}
+                  onChange={(e) => setUserInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      sendUserInput();
+                    }
+                  }}
+                />
+                <div className={applyStyle('textInputButton', styles.textInputButton)} onClick={sendUserInput}>
+                  {textBoxInputButtonText || '发送'}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
